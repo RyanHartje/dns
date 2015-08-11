@@ -7,7 +7,7 @@ logging.basicConfig(filename=config.log_path, level=logging.INFO)
 
 class Zone():
     def __init__(self,domain):
-        zone_contents=""
+        self.zone_contents=""
         # We need to set the domain, and create a file for the zone if it doesn't exist.
         # This will allow us to import zones because they will be in our zone file path.
         logging.info('[%s] creating zone for %s' % (datetime.datetime.now(), domain))
@@ -24,6 +24,8 @@ class Zone():
         except OSError as e:
           if e.errno == errno.EEXIST:
             logging.info('[%s] Zone for %s exists' % (datetime.datetime.now(),self.domain)) 
+            file_handle = open(self.file)
+            self.zone_contents = file_handle.read()
         # This else should only contain the creation of the zone
         else:
           logging.info('[%s] Attempting to create zone file for %s' % (datetime.datetime.now(),domain))
@@ -32,12 +34,11 @@ class Zone():
           # with our domain, and create a new serial.
           try:
             template_file = open('./template.db')
-            zone_contents = template_file.read()
-            logging.info("[%s] Zone contents generated:\n%s\n\n" % (datetime.datetime.now(),serial))
-            template_file.close()
+            self.zone_contents = template_file.read()
+            logging.info("[%s] Zone contents generated:\n%s\n\n" % (datetime.datetime.now(),self.zone_contents))
+            #template_file.close()
           except:
             logging.error("[%s] ERROR - failed to find template file at ./template.db" % datetime.datetime.now())
-          
           # Get Serial Data
           Y = datetime.datetime.now().year
           M = "%02d" % datetime.datetime.now().month
@@ -45,23 +46,38 @@ class Zone():
           # Let's create our serial object
           # YYYYMMDD00
           # 2002022401
-          serial = "%s%s%s00"
+          serial = "%s%s%s00" % (Y,M,D)
           logging.info("[%s] Generated serial: %s" % (datetime.datetime.now(),serial))
 
           # Add in our regex here to replace example.com and the current serial to our examples
-          zone_contents = re.sub("example.com", domain, zone_contents)
-          zone_contents = re.sub("2002022401", serial, zone_contents)
-          loggingin.info('[%s] Zone contents after sub:\n%s\n\n' % (datetime.datetime.now(),zone_contents))
+          self.zone_contents = re.sub("example.com", domain, self.zone_contents)
+          self.zone_contents = re.sub("2002022401", serial, self.zone_contents)
+          logging.info('[%s] Zone contents after sub:\n%s\n\n' % (datetime.datetime.now(),self.zone_contents))
            
           
           # Now write our zone to disk
           with os.fdopen(file_handle, 'w') as file_obj:
-            file_obj.write(zone_contents)
+            file_obj.write(self.zone_contents)
             file_obj.close()
           
         
 
-    #def get_domain(domain):
+    def get_zone(self):
+      return self.zone_contents
+
+    def get_records_type(self,record_type):
+      zone_file = open(self.file)
+      record_data = [zone_file.read().split('\n')]
+      results = []
+      for record in record_data:
+        if record.split() == record_type:
+          results.append(record)
+      return results
+
+
+    def delete(self):
+      os.remove(self.file)
+      
         
 if __name__ == "__main__":
   logging.info("\n[%s] called from command line" % datetime.datetime.now())
@@ -78,4 +94,8 @@ if __name__ == "__main__":
   if command == "create":
     for domain in args: 
       my_zone = Zone(domain)
+  elif command == "delete":
+    for domain in args:
+      my_zone = Zone(domain)
+      my_zone.delete()
       
