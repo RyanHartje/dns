@@ -1,9 +1,19 @@
 #import dns.zones
 # log_path, zone_path
-import sys, os, config, logging, datetime, errno, re
+import sys, os, config, logging, datetime, errno, re, glob
 
 #initialize the logs
 logging.basicConfig(filename=config.log_path, level=logging.INFO)
+
+def list_zones():
+  files = []
+  #for file in glob.glob('%s*db' % config.zone_path):
+  #  files.append(file)
+  for file in os.listdir(config.zone_path):
+    if file.endswith('.db'):
+      files.append(file)
+  
+  return files
 
 class Zone():
     def __init__(self,domain):
@@ -81,10 +91,9 @@ class Zone():
         
 if __name__ == "__main__":
   logging.info("\n[%s] called from command line" % datetime.datetime.now())
-  if len(sys.argv) > 2:
+  if len(sys.argv) > 1:
     command = sys.argv[1]
-    args = sys.argv[1:len(sys.argv)]
-    print("nn %s %s" % (command, args))
+    args = sys.argv[2:len(sys.argv)]
   else:
     print('nn_dns [command] <domains>\nNinjanode DNS\nexample: nn_dns create domain.com')
 
@@ -98,4 +107,8 @@ if __name__ == "__main__":
     for domain in args:
       my_zone = Zone(domain)
       my_zone.delete()
+  elif command == "list":
+    print(list_zones())
+  elif command == "debug":
+    print("%s\%s" % (command, args))
       
