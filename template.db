@@ -8,15 +8,15 @@ $ORIGIN example.com.
 			      1w ; expire
 			      3h ; minimum
 			     )
-       IN  NS     ns1.example.com. ; in the domain
-       IN  NS     ns2.example.com. ; external to domain
-       IN  MX  10 mail.example.com. ; external mail provider
+       IN  NS     ns1.example.com.
+       IN  NS     ns2.example.com.
+       IN  MX  10 mail.example.com.
 
 ; server host definitions
-@    IN  A      192.168.0.1  ;name server definition     
-ns1    IN  A      192.168.0.1  ;name server definition     
-ns2    IN  A      192.168.0.1  ;name server definition     
-www    IN  A      192.168.0.1  ;web server definition
-mail    IN  CNAME  example.com.  ;ftp server definition
+@    IN  A      192.168.0.1 
+ns1    IN  A      192.168.0.1 
+ns2    IN  A      192.168.0.1
+www    IN  A      192.168.0.1
+mail    IN  CNAME  example.com.
 
 ; custom records below 

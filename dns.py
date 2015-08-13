@@ -73,20 +73,94 @@ class Zone():
         
 
     def get_zone(self):
+      self.zone_contents = open(self.file).read()
       return self.zone_contents
 
     def get_records_type(self,record_type):
       zone_file = open(self.file)
-      record_data = [zone_file.read().split('\n')]
+      record_data = zone_file.read().split('\n')
       results = []
       for record in record_data:
-        if record.split() == record_type:
-          results.append(record)
+        if len(record.split()) > 2:
+          if record.split()[2] == record_type:
+            results.append(record)
+      zone_file.close()
       return results
 
+    def find_record(self,value):
+      zone_file = open(self.file)
+      record_data = zone_file.read().split('\n')
+      results = []
+      for record in record_data:
+        if len(record.split()) > 0:
+          if record.split()[0] == value:
+            results.append(record)
+      zone_file.close()
+      return results
+
+    def add_record(self,name,type,value):
+      zone_file = open(self.file,'a')
+      zone_file.write("%s IN %s %s \n" % (name,type,value))
+      zone_file.close()
+
+    def edit_record(self,old_name,old_type,old_value,new_name,new_type,new_value):
+      zone_file = open(self.file,'r+')
+      record = "%s IN %s %s \n" % (old_name,old_type,old_value)
+      file_content = zone_file.readlines()
+      # Set the cursor at the top of the file again
+      zone_file.seek(0)
+      for line in file_content:
+        # When we find the old line, write the new one instead
+        # This may seem elaborate, but its a way of ensuring we're editing the right
+        #   record and that we don't miss it
+        if re.search(old_name,line) and re.search(old_type,line) and re.search(old_value,line):
+          zone_file.write("%s IN %s %s \n" % (new_name,new_type,new_value))
+        else:
+          zone_file.write(line)
+      # remove any remaining text after our cursor
+      zone_file.truncate()
+      
+      zone_file.close()
+
+    def delete_record(self,name,type,value):
+      # We should really have some sort of backup in effect here
+      zone_file = open(self.file,'r+')
+      record = "%s IN %s %s \n" % (name,type,value)
+      file_content = zone_file.readlines()
+      # Let's remove the file before we rewrite it
+      self.delete()
+
+      for line in file_content:
+        # As long as the record we want to delete isn't here, lets keep writing
+        if line != record:
+          zone_file.write(line)
+      zone_file.close()
+
+    def delete_record_match(self,match_value):
+      # We should really have some sort of backup in effect here
+      zone_file = open(self.file,'r+')
+      for line in zone_file.readlines():
+        if line != match_value:
+          zone_file.write(line)
+      zone_file.close()
+
+
+      
 
     def delete(self):
       os.remove(self.file)
+
+def get_records(domain):
+  zone_file = open(config.zone_path+domain+".db")
+  record_data = zone_file.read().split('\n')
+  records = []
+  for record in record_data:
+    #records.append(record) 
+    if len(record.split()) > 1:
+      if record.split()[1] == "IN":
+        #print(record)
+        records.append(record)
+  return records
       
         
 if __name__ == "__main__":
@@ -108,7 +182,12 @@ if __name__ == "__main__":
       my_zone = Zone(domain)
       my_zone.delete()
   elif command == "list":
-    print(list_zones())
+    if not args:
+      print(list_zones())
+    else:
+      for arg in args:
+        if arg:
+            print(get_records(arg))
   elif command == "debug":
     print("%s\%s" % (command, args))
       
