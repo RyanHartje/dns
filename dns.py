@@ -144,8 +144,7 @@ class Zone():
           zone_file.write(line)
       zone_file.close()
 
-
-      
+     
 
     def delete(self):
       os.remove(self.file)
@@ -161,6 +160,14 @@ def get_records(domain):
         #print(record)
         records.append(record)
   return records
+
+def rndc_reload():
+  # First, check the zone syntax. If a syntax check passes, 
+  # reload rndc so our zone changes go into effect
+  #if
+  os.system('rndc reload')
+  logging.info('[%s] rndc reloaded' % datetime.datetime.now())
+ 
       
         
 if __name__ == "__main__":
